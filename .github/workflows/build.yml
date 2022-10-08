@@ -53,6 +53,7 @@ jobs:
         sed -i "s%~/.ssh/hackathon.rsa%../hackathon.rsa%g" metrics/start.sh
     
     - name: Run metrics only PR
+      id: pr
       if: github.event_name == 'pull_request'
       run : |
         cd metrics
@@ -62,7 +63,7 @@ jobs:
         one=$(grep "TOTAL" one.txt | awk '{ print $2 }' | awk -F '(' '{ print $1 }')
         two=$(grep "TOTAL" two.txt | awk '{ print $2 }' | awk -F '(' '{ print $1 }')
         three=$(grep "TOTAL" three.txt | awk '{ print $2 }' | awk -F '(' '{ print $1 }')
-        python3 -c "from statistics import mean; print('AVG: {}'.format(mean([$one,$two,$three])))"
+        echo "::set-output name=cons::$(python3 -c "from statistics import mean; print('AVG: {}'.format(mean([$one,$two,$three])))")"
 
     - name: Run metrics main
       if: github.event_name == 'push'
@@ -75,3 +76,13 @@ jobs:
         two=$(grep "TOTAL" two.txt | awk '{ print $2 }' | awk -F '(' '{ print $1 }')
         three=$(grep "TOTAL" three.txt | awk '{ print $2 }' | awk -F '(' '{ print $1 }')
         python3 -c "from statistics import mean; print('AVG: {}'.format(mean([$one,$two,$three])))"
+
+    - name: Coment
+      uses: thollander/actions-comment-pull-request@v1
+      if: github.event_name == 'pull_request'
+      with:
+        message: |
+          Consumption: ${MESSAGE}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        MESSAGE: ${{steps.pr.outputs.cons}}
