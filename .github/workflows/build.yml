@@ -10,7 +10,7 @@ on:
     
 jobs:
   Build:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     steps:
     ## Check out code
     - uses: actions/checkout@v2
